@@ -33,14 +33,14 @@ data class DbWeather constructor(
 
 fun DbBase.asDomainModel(): Models.PostResponse =
     Models.PostResponse(
-        timezone = timezone ?: 0,
-        name = name.orEmpty(),
+        timezone = timezone,
+        name = name,
         coord = Models.Coord(
-            lon = coord.lon ?: 0.0,
-            lat = coord.lat ?: 0.0
+            lon = coord.lon,
+            lat = coord.lat
         ),
-        weather = Models.Weather(
-            main = weather.main.orEmpty(),
-            description = weather.description.orEmpty()
-        )
+        weather = listOf(Models.Weather(
+            main = weather.main,
+            description = weather.description
+        ))
     )

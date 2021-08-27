@@ -31,6 +31,6 @@ class WeatherRepository @Inject constructor(
     }
 
     companion object {
-        private const val API_KEY = "69fa176e0b9e4c0aebe0cea100aa629d"
+        const val API_KEY = "69fa176e0b9e4c0aebe0cea100aa629d"
     }
 }

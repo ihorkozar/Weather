@@ -3,7 +3,7 @@ package com.example.weather.domain
 class Models {
     data class PostResponse(
         val coord: Coord,
-        val weather: Weather,
+        val weather: List<Weather>,
         val timezone: Int,
         val name: String
     )

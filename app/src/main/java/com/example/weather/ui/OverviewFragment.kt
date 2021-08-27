@@ -1,28 +1,71 @@
 package com.example.weather.ui
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.example.weather.BoundService
 import com.example.weather.databinding.FragmentOverviewBinding
 import com.example.weather.domain.Models
+import com.example.weather.network.NetworkPostResponse
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class OverviewFragment: Fragment() {
+class OverviewFragment : Fragment() {
     private lateinit var binding: FragmentOverviewBinding
     private val viewModel by viewModels<OverviewViewModel>()
     private var weatherResponse: Models.PostResponse? = null
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        viewModel.weather.observe(viewLifecycleOwner) { weather ->
-            weather.apply {
-                weatherResponse = weather
+    lateinit var boundService: BoundService
+    var bound = false
+
+    private val broadcast: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val data = intent.getParcelableExtra<NetworkPostResponse>("data")
+            data?.let {
+                binding.tvTimeZone.text = "timezone: ${it.timezone}"
+                binding.tvName.text = "city: ${it.name}"
+                binding.tvCoordLat.text = "lat: ${it.coord.lat}"
+                binding.tvCoordLon.text = "lon: ${it.coord.lon}"
+                binding.tvMain.text = it.weather.first().main
+                binding.tvDescription.text = it.weather.first().description
             }
         }
+    }
+
+    private val connection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(
+            className: ComponentName,
+            service: IBinder
+        ) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            val binder: BoundService.LocalBinder = service as BoundService.LocalBinder
+            boundService = binder.getService
+            bound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            bound = false
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // viewModel.weather.observe(viewLifecycleOwner) { weather ->
+        //     weather.apply {
+        //         weatherResponse = weather
+        //     }
+        // }
     }
 
     override fun onCreateView(
@@ -31,9 +74,15 @@ class OverviewFragment: Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentOverviewBinding.inflate(inflater)
-        weatherResponse?.apply {
-            binding.textView.text = name
-        }
+        // weatherResponse?.apply {
+        //     binding.tvName.text = name
+        // }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+            broadcast,
+            IntentFilter("myBroadcast")
+        )
+        val intent = Intent(requireContext(), BoundService::class.java)
+        activity?.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         return binding.root
     }
 }
