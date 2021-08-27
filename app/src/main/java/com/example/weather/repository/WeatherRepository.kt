@@ -5,6 +5,7 @@ import androidx.lifecycle.Transformations
 import com.example.weather.db.WeatherDao
 import com.example.weather.db.asDomainModel
 import com.example.weather.domain.Models
+import com.example.weather.network.NetworkPostResponse
 import com.example.weather.network.WeatherApi
 import com.example.weather.network.asDatabaseModel
 import kotlinx.coroutines.Dispatchers
@@ -16,20 +17,16 @@ class WeatherRepository @Inject constructor(
     private val apiService: WeatherApi
 ) {
 
-    lateinit var weather: LiveData<Models.PostResponse>
-    // val weather: LiveData<Models.PostResponse> = Transformations.map(
-    //     dao.getData()
-    // ) {
-    //     it.asDomainModel()
-    // }
+    val weather: LiveData<Models.PostResponse> = Transformations.map(
+        dao.getData()
+    ) {
+        it.asDomainModel()
+    }
 
     suspend fun refreshData() {
         withContext(Dispatchers.IO) {
-            val postResponse = apiService.getPostResponseAsync("London", API_KEY).await()
+            val postResponse: NetworkPostResponse = apiService.getPostResponseAsync("London", API_KEY).await()
             dao.insert(postResponse.asDatabaseModel())
-            weather = Transformations.map(dao.getData()) {
-                it.asDomainModel()
-            }
         }
     }
 

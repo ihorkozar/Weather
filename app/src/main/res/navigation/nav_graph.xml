@@ -3,9 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@+id/nav_overview">
+    app:startDestination="@+id/overviewFragment">
     <fragment
-        android:id="@+id/nav_overview"
+        android:id="@+id/overviewFragment"
         android:name="com.example.weather.ui.OverviewFragment"
+        android:label="fragment_overview"
         tools:layout="@layout/fragment_overview" />
 </navigation>
