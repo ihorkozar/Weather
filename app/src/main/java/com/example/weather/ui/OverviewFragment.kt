@@ -71,10 +71,7 @@ class OverviewFragment : Fragment() {
     }
     override fun onResume() {
         super.onResume()
-        requireContext().registerReceiver(
-            broadcast,
-            IntentFilter("myBroadcast")
-        )
+        requireContext().registerReceiver(broadcast, IntentFilter("myBroadcast"))
     }
 
     override fun onPause() {
