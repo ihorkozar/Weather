@@ -12,6 +12,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,7 +25,8 @@ class BoundService : Service() {
     // Binder given to clients
     private val binder = LocalBinder()
 
-    lateinit var postResponse: NetworkPostResponse
+    private lateinit var postResponse: NetworkPostResponse
+    private val scope = CoroutineScope(Job() + Dispatchers.Main)
 
     inner class LocalBinder : Binder() {
         val getService: BoundService = this@BoundService
@@ -33,21 +35,23 @@ class BoundService : Service() {
     private fun postData(postResponse: NetworkPostResponse) {
         val intent = Intent("myBroadcast")
         intent.putExtra("data", postResponse)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        this.sendBroadcast(intent)
     }
 
     override fun onBind(intent: Intent?): IBinder {
         Log.d("onBind", "kek")
-        val scope = CoroutineScope(Job() + Dispatchers.IO)
         scope.launch {
             withContext(Dispatchers.IO) {
-                postResponse = apiService
-                    .getPostResponseAsync("London", API_KEY)
-                    .await()
+                postResponse = apiService.getPostResponseAsync("London", API_KEY)
                 postData(postResponse)
             }
         }
         return binder
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
     }
 
     companion object {

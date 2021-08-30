@@ -60,12 +60,31 @@ class OverviewFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentOverviewBinding.inflate(inflater)
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+        return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Intent(requireContext(), BoundService::class.java).also {
+            activity?.bindService(it, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        requireContext().registerReceiver(
             broadcast,
             IntentFilter("myBroadcast")
         )
-        val intent = Intent(requireContext(), BoundService::class.java)
-        activity?.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-        return binding.root
+    }
+
+    override fun onPause() {
+        super.onPause()
+        requireContext().unregisterReceiver(broadcast)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        activity?.unbindService(connection)
+        bound = false
     }
 }

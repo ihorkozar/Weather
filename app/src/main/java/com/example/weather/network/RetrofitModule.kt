@@ -23,7 +23,6 @@ class RetrofitModule {
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(CoroutineCallAdapterFactory())
             .build()
         return retrofit.create(WeatherApi::class.java)
     }
