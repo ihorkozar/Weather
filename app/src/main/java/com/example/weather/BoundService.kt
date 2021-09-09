@@ -5,16 +5,15 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.weather.network.NetworkPostResponse
 import com.example.weather.network.WeatherApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -25,8 +24,8 @@ class BoundService : Service() {
     // Binder given to clients
     private val binder = LocalBinder()
 
-    private lateinit var postResponse: NetworkPostResponse
-    private val scope = CoroutineScope(Job() + Dispatchers.Main)
+    private var postResponse: NetworkPostResponse? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     inner class LocalBinder : Binder() {
         val getService: BoundService = this@BoundService
@@ -41,10 +40,8 @@ class BoundService : Service() {
     override fun onBind(intent: Intent?): IBinder {
         Log.d("onBind", "kek")
         scope.launch {
-            withContext(Dispatchers.IO) {
-                postResponse = apiService.getPostResponseAsync("London", API_KEY)
-                postData(postResponse)
-            }
+            postResponse = apiService.getPostResponseAsync("London", API_KEY)
+            postResponse?.let { postData(it) }
         }
         return binder
     }
