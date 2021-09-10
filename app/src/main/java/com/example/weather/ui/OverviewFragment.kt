@@ -20,7 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class OverviewFragment : Fragment() {
-    private lateinit var binding: FragmentOverviewBinding
+    private var fragmentOverviewBinding: FragmentOverviewBinding? = null
     lateinit var boundService: BoundService
     var bound = false
 
@@ -28,12 +28,14 @@ class OverviewFragment : Fragment() {
         override fun onReceive(context: Context, intent: Intent) {
             val data = intent.getParcelableExtra<NetworkPostResponse>("data")
             data?.let {
-                binding.tvTimeZone.text = "timezone: ${it.timezone}"
-                binding.tvName.text = "city: ${it.name}"
-                binding.tvCoordLat.text = "lat: ${it.coord.lat}"
-                binding.tvCoordLon.text = "lon: ${it.coord.lon}"
-                binding.tvMain.text = it.weather.first().main
-                binding.tvDescription.text = it.weather.first().description
+                fragmentOverviewBinding?.let { binding ->
+                    binding.tvTimeZone.text = "timezone: ${it.timezone}"
+                    binding.tvName.text = "city: ${it.name}"
+                    binding.tvCoordLat.text = "lat: ${it.coord.lat}"
+                    binding.tvCoordLon.text = "lon: ${it.coord.lon}"
+                    binding.tvMain.text = it.weather.first().main
+                    binding.tvDescription.text = it.weather.first().description
+                }
             }
         }
     }
@@ -59,7 +61,8 @@ class OverviewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentOverviewBinding.inflate(inflater)
+        val binding = FragmentOverviewBinding.inflate(inflater)
+        fragmentOverviewBinding = binding
         return binding.root
     }
 
@@ -83,5 +86,10 @@ class OverviewFragment : Fragment() {
         super.onStop()
         activity?.unbindService(connection)
         bound = false
+    }
+
+    override fun onDestroyView() {
+        fragmentOverviewBinding = null
+        super.onDestroyView()
     }
 }
