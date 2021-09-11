@@ -20,7 +20,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class OverviewFragment : Fragment() {
-    private var fragmentOverviewBinding: FragmentOverviewBinding? = null
+    private var _binding: FragmentOverviewBinding? = null
+    private val binding: FragmentOverviewBinding
+        get() = requireNotNull(_binding)
+
     lateinit var boundService: BoundService
     var bound = false
 
@@ -28,14 +31,12 @@ class OverviewFragment : Fragment() {
         override fun onReceive(context: Context, intent: Intent) {
             val data = intent.getParcelableExtra<NetworkPostResponse>("data")
             data?.let {
-                fragmentOverviewBinding?.let { binding ->
-                    binding.tvTimeZone.text = "timezone: ${it.timezone}"
-                    binding.tvName.text = "city: ${it.name}"
-                    binding.tvCoordLat.text = "lat: ${it.coord.lat}"
-                    binding.tvCoordLon.text = "lon: ${it.coord.lon}"
-                    binding.tvMain.text = it.weather.first().main
-                    binding.tvDescription.text = it.weather.first().description
-                }
+                binding.tvTimeZone.text = "timezone: ${it.timezone}"
+                binding.tvName.text = "city: ${it.name}"
+                binding.tvCoordLat.text = "lat: ${it.coord.lat}"
+                binding.tvCoordLon.text = "lon: ${it.coord.lon}"
+                binding.tvMain.text = it.weather.first().main
+                binding.tvDescription.text = it.weather.first().description
             }
         }
     }
@@ -61,8 +62,7 @@ class OverviewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentOverviewBinding.inflate(inflater)
-        fragmentOverviewBinding = binding
+        _binding = FragmentOverviewBinding.inflate(inflater)
         return binding.root
     }
 
@@ -72,6 +72,7 @@ class OverviewFragment : Fragment() {
             activity?.bindService(it, connection, Context.BIND_AUTO_CREATE)
         }
     }
+
     override fun onResume() {
         super.onResume()
         requireContext().registerReceiver(broadcast, IntentFilter("myBroadcast"))
@@ -89,7 +90,7 @@ class OverviewFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        fragmentOverviewBinding = null
+        _binding = null
         super.onDestroyView()
     }
 }
