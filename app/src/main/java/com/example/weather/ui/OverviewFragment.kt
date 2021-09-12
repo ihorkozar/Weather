@@ -20,7 +20,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class OverviewFragment : Fragment() {
-    private lateinit var binding: FragmentOverviewBinding
+    private var _binding: FragmentOverviewBinding? = null
+    private val binding: FragmentOverviewBinding
+        get() = requireNotNull(_binding)
+
     lateinit var boundService: BoundService
     var bound = false
 
@@ -59,13 +62,35 @@ class OverviewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentOverviewBinding.inflate(inflater)
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-            broadcast,
-            IntentFilter("myBroadcast")
-        )
-        val intent = Intent(requireContext(), BoundService::class.java)
-        activity?.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        _binding = FragmentOverviewBinding.inflate(inflater)
         return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Intent(requireContext(), BoundService::class.java).also {
+            activity?.bindService(it, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requireContext().registerReceiver(broadcast, IntentFilter("myBroadcast"))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        requireContext().unregisterReceiver(broadcast)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        activity?.unbindService(connection)
+        bound = false
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
     }
 }
